@@ -11,6 +11,7 @@ import {
 } from 'fastify-type-provider-zod'
 
 import { loginRoute } from './routes/auth/login'
+import { getProfileRoute } from './routes/auth/profile'
 import { registerRoute } from './routes/auth/register'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
@@ -56,6 +57,7 @@ app.get('/health', () => {
 
 app.register(registerRoute)
 app.register(loginRoute)
+app.register(getProfileRoute)
 
 app.listen({ port: 3333, host: '0.0.0.0' }).then(() => {
   console.log('HTTP server running on http://localhost:3333')

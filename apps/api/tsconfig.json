@@ -1,0 +1,12 @@
+{
+  "extends": ["@librashub/tsconfig/node.json"],
+  "include": ["src/**/*", "@types/**/*", "prisma.config.ts"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node"],
+    "moduleResolution": "node16"
+  }
+}

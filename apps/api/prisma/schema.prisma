@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  city          String?
+  state         String?
+  countryRegion String?
+  avatarUrl     String?
+  bio           String?
+  points        Int      @default(0)
+  level         String   @default("Beginner")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  signs Sign[]
+
+  @@map("users")
+}
+
+model Sign {
+  id          String @id @default(uuid())
+  gloss       String
+  description String
+  category    String
+
+  videoUrl String?
+  imageUrl String?
+  thumbUrl String?
+
+  keypointsUrl    String? // JSON file URL for keypoints data
+  keypoints       Json?
+  depthUrl        String?
+  segmentationUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User       @relation(fields: [userId], references: [id])
+  userId   String
+  tagId    String?
+  SignTags SignTags[]
+
+  @@index([category])
+  @@index([gloss])
+  @@map("signs")
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+
+  SignTags SignTags[]
+
+  @@map("tags")
+}
+
+model SignTags {
+  sign   Sign   @relation(fields: [signId], references: [id])
+  signId String
+
+  tag   Tag    @relation(fields: [tagId], references: [id])
+  tagId String
+
+  @@id([signId, tagId])
+  @@map("signs_tags")
+}

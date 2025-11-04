@@ -1,0 +1,12 @@
+{
+  "name": "@librashub/prettier",
+  "version": "0.0.0",
+  "main": "index.mjs",
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "@librashub/prettier": "workspace:*"
+  },
+  "prettier": "@librashub/prettier"
+}

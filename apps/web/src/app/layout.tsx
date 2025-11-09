@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import VLibras from '@/components/vlibras'
 
 export const metadata: Metadata = {
   title: 'LibrasHUB',
@@ -12,7 +13,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className={`antialiased`}>{children}</body>
+      <body className={`antialiased`}>
+        <VLibras />
+        {children}
+      </body>
     </html>
   )
 }

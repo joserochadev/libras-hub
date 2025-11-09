@@ -72,23 +72,18 @@ export default function SignsPage() {
   }
 
   return (
-    //  CORREÇÃO: Trocado o gradiente por um fundo cinza claro sólido
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            {/* CORREÇÃO: Adicionado texto escuro explícito */}
             <h1 className="font-heading mb-2 text-4xl font-bold text-gray-900">
               Explorar Sinais
             </h1>
-            {/* CORREÇÃO: Adicionado texto escuro explícito */}
             <p className="text-gray-600">
               Descubra e aprenda novos sinais em Libras
             </p>
           </div>
-          <Link href="/signs/new">
-            {/* CORREÇÃO: Adicionado estilo de botão principal (azul) */}
+          <Link href="/sinais/novo-sinal">
             <Button
               size="lg"
               className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
@@ -99,7 +94,6 @@ export default function SignsPage() {
           </Link>
         </div>
 
-        {/* Filters */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
@@ -110,7 +104,6 @@ export default function SignsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                {/* CORREÇÃO: Adicionado estilo de botão principal (azul) */}
                 <Button
                   onClick={handleSearch}
                   className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
@@ -125,7 +118,6 @@ export default function SignsPage() {
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
               <SelectContent>
-                {/* CORREÇÃO: O valor "all" estava duplicado, removi um */}
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="greeting">Saudação</SelectItem>
                 <SelectItem value="verb">Verbo</SelectItem>
@@ -142,7 +134,6 @@ export default function SignsPage() {
           </div>
         </div>
 
-        {/* Signs Grid */}
         {loading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
@@ -157,7 +148,6 @@ export default function SignsPage() {
               ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2">
                 <Button
@@ -172,7 +162,6 @@ export default function SignsPage() {
                     <Button
                       key={i}
                       variant={page === i + 1 ? 'default' : 'outline'}
-                      // CORREÇÃO: Estilo explícito para o botão de página ativa
                       className={
                         page === i + 1
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -196,7 +185,6 @@ export default function SignsPage() {
           </>
         ) : (
           <div className="py-12 text-center">
-            {/* CORREÇÃO: Adicionado texto escuro explícito */}
             <p className="text-lg text-gray-600">Nenhum sinal encontrado</p>
           </div>
         )}
@@ -207,7 +195,6 @@ export default function SignsPage() {
 
 function SignCardSkeleton() {
   return (
-    // O bg-white aqui está OK, pois não há texto, apenas Skeletons
     <div className="overflow-hidden rounded-lg bg-white shadow-md">
       <Skeleton className="aspect-video w-full" />
       <div className="space-y-3 p-4">

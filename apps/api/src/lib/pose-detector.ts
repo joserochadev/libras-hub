@@ -22,7 +22,9 @@ export class PoseDetector {
     this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath:
-          'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          // 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+
         delegate: 'CPU',
       },
       runningMode: 'IMAGE',
@@ -40,7 +42,7 @@ export class PoseDetector {
 
     // Carrega e prepara a imagem
     const imageBuffer = await sharp(imagePath)
-      .resize(640, 480, { fit: 'contain' })
+      // .resize(640, 480, { fit: 'cover' })
       .raw()
       .toBuffer({ resolveWithObject: true })
 
@@ -105,12 +107,12 @@ export class PoseDetector {
     ]
 
     const visibleCount = upperBodyIndices.filter((idx) => {
-      const landmark = landmarks[idx]
-      return landmark && (landmark.visibility || 0) > 0.5
+      const lm = landmarks[idx]
+      return lm && lm.x > 0 && lm.x < 1 && lm.y > 0 && lm.y < 1
     }).length
 
-    // Precisa ter pelo menos 70% dos pontos do torso visíveis
-    return visibleCount >= upperBodyIndices.length * 0.7
+    // Precisa ter pelo menos 50% dos pontos do torso visíveis
+    return visibleCount >= upperBodyIndices.length * 0.35
   }
 
   /**
@@ -187,7 +189,7 @@ export class PoseDetector {
     const validRatio = validFrames / framesAnalyzed
 
     return {
-      isValid: validRatio >= 0.6, // Pelo menos 60% dos frames devem ser válidos
+      isValid: validRatio >= 0.5, // Pelo menos 50% dos frames devem ser válidos
       averageConfidence,
       framesAnalyzed,
       validFrames,

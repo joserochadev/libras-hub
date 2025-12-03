@@ -79,9 +79,9 @@ const HOST = process.env.HOST || '0.0.0.0'
 
 app.listen({ port: Number(PORT), host: HOST }).then(() => {
   console.log(`
-  🚀 LibrasHUB API running!
-    URL: http://localhost:${PORT}
-    Docs: http://localhost:${PORT}/docs
-    Health: http://localhost:${PORT}/health
+🚀 LibrasHUB API running!
+URL: http://localhost:${PORT}
+Docs: http://localhost:${PORT}/docs
+Health: http://localhost:${PORT}/health
   `)
 })

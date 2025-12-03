@@ -10,11 +10,12 @@ import { cloudinary } from '@/lib/cloudinary'
 import { poseDetector } from '@/lib/pose-detector'
 import { prisma } from '@/lib/prisma'
 import { videoProcessor } from '@/lib/video-processor'
+import { randomUUID } from 'crypto'
 
 export function createSignRoute(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
-    .register(auth)
+    // .register(auth)
     .post(
       '/signs',
       {
@@ -31,7 +32,7 @@ export function createSignRoute(app: FastifyInstance) {
                 gloss: z.string(),
                 description: z.string(),
                 category: z.string(),
-                videoUrl: z.url(),
+                videoUrl: z.url().nullable(),
                 thumbUrl: z.url().nullable(),
                 keypoints: z.any(),
                 poseAnalysis: z.object({
@@ -48,7 +49,7 @@ export function createSignRoute(app: FastifyInstance) {
         },
       },
       async (request, reply) => {
-        const userId = await request.getCurrentUserId()
+        const userId = await randomUUID()
 
         // Recebe o upload multipart
         const data = await request.file()
@@ -84,7 +85,7 @@ export function createSignRoute(app: FastifyInstance) {
         try {
           // 1. Extrai frames para análise
           console.log('📸 Extracting frames...')
-          const frames = await videoProcessor.extractFrames(tempPath, 5)
+          const frames = await videoProcessor.extractFrames(tempPath, 12)
 
           // 2. Analisa pose nos frames
           console.log('🕵️ Analyzing pose...')
@@ -205,7 +206,7 @@ export function createSignRoute(app: FastifyInstance) {
             // Ignora erros de limpeza
           }
 
-          return reply.status(500).send({
+          return reply.status(400).send({
             message: 'Error processing video',
           })
         }

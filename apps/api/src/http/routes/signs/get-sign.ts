@@ -28,14 +28,6 @@ export function getSignRoute(app: FastifyInstance) {
               keypoints: z.any().nullable(),
               createdAt: z.date(),
               updatedAt: z.date(),
-              user: z.object({
-                id: z.uuid(),
-                name: z.string(),
-                city: z.string().nullable(),
-                state: z.string().nullable(),
-                avatarUrl: z.url().nullable(),
-                bio: z.string().nullable(),
-              }),
             }),
           }),
           404: z.object({
@@ -49,18 +41,6 @@ export function getSignRoute(app: FastifyInstance) {
 
       const sign = await prisma.sign.findUnique({
         where: { id: signId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              city: true,
-              state: true,
-              avatarUrl: true,
-              bio: true,
-            },
-          },
-        },
       })
 
       if (!sign) {

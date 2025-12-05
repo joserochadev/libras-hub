@@ -7,3 +7,8 @@ node_modules
 /generated/prisma
 
 /generated/prisma
+
+/temp
+
+*.jpg
+*.webm

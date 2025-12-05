@@ -177,26 +177,32 @@ export default function SignDetailPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={sign.user.avatarUrl || undefined} />
+                    <AvatarImage src="https://github.com/joserochadev.png" />
                     <AvatarFallback>
                       <User className="h-6 w-6" />
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{sign.user.name}</p>
-                    {(sign.user.city || sign.user.state) && (
+                    <p className="font-medium">José Rocha</p>
+                    {
+                      /*{(sign.user.city || sign.user.state) && (
                       <p className="text-muted-foreground flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         {sign.user.city}, {sign.user.state}
                       </p>
-                    )}
+                    )}*/
+                      <p className="text-muted-foreground flex items-center gap-1 text-sm">
+                        <MapPin className="h-3 w-3" />
+                        Tianguá, Ceará
+                      </p>
+                    }
                   </div>
                 </div>
-                {sign.user.bio && (
+                {/*{sign.user.bio && (
                   <p className="text-muted-foreground text-sm">
                     {sign.user.bio}
                   </p>
-                )}
+                )}*/}
               </CardContent>
             </Card>
 

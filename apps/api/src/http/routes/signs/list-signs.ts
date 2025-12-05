@@ -29,13 +29,6 @@ export function listSignsRoute(app: FastifyInstance) {
                 videoUrl: z.url().nullable(),
                 thumbUrl: z.url().nullable(),
                 createdAt: z.date(),
-                user: z.object({
-                  id: z.uuid(),
-                  name: z.string(),
-                  city: z.string().nullable(),
-                  state: z.string().nullable(),
-                  avatarUrl: z.url().nullable(),
-                }),
               })
             ),
             pagination: z.object({
@@ -64,17 +57,6 @@ export function listSignsRoute(app: FastifyInstance) {
       const [signs, total] = await Promise.all([
         prisma.sign.findMany({
           where,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                city: true,
-                state: true,
-                avatarUrl: true,
-              },
-            },
-          },
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,

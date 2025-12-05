@@ -29,6 +29,9 @@ export class PoseDetector {
       },
       runningMode: 'IMAGE',
       numPoses: 1,
+      minPoseDetectionConfidence: 0.3,
+      minPosePresenceConfidence: 0.3,
+      minTrackingConfidence: 0.3,
     })
   }
 
@@ -42,7 +45,7 @@ export class PoseDetector {
 
     // Carrega e prepara a imagem
     const imageBuffer = await sharp(imagePath)
-      // .resize(640, 480, { fit: 'cover' })
+      .resize(640, 480, { fit: 'inside' })
       .raw()
       .toBuffer({ resolveWithObject: true })
 
@@ -76,7 +79,7 @@ export class PoseDetector {
       landmarks.length
 
     return {
-      isValidPose: hasUpperBody && confidence > 0.5,
+      isValidPose: hasUpperBody && confidence > 0.3,
       hasUpperBody,
       confidence,
       landmarks: landmarks.map((lm) => ({
@@ -101,18 +104,34 @@ export class PoseDetector {
       14, // Cotovelos
       15,
       16, // Punhos
-      0, // Nariz
-      23,
-      24, // Quadril
     ]
+
+    const shouldersVisible =
+      landmarks[11] &&
+      landmarks[12] &&
+      landmarks[11].visibility > 0.3 &&
+      landmarks[12].visibility > 0.3
+
+    if (!shouldersVisible) {
+      console.log('Shoulders not visible enough')
+      return false
+    }
 
     const visibleCount = upperBodyIndices.filter((idx) => {
       const lm = landmarks[idx]
-      return lm && lm.x > 0 && lm.x < 1 && lm.y > 0 && lm.y < 1
+      return lm && lm.visibility > 0.3
     }).length
 
+    const isValid = visibleCount >= 4
+
+    console.log(
+      `✓ Pontos visíveis: ${visibleCount}/6 - ${isValid ? 'VÁLIDO' : 'INVÁLIDO'}`
+    )
+
+    return isValid
+
     // Precisa ter pelo menos 50% dos pontos do torso visíveis
-    return visibleCount >= upperBodyIndices.length * 0.35
+    // return visibleCount >= upperBodyIndices.length * 0.35
   }
 
   /**
@@ -172,15 +191,25 @@ export class PoseDetector {
     let totalConfidence = 0
     let validFrames = 0
 
+    console.log(`📊 Analisando ${framePaths.length} frames...`)
+
     for (const framePath of framePaths) {
       try {
         const result = await this.detectPose(framePath)
         totalConfidence += result.confidence
+
         if (result.isValidPose) {
           validFrames++
+          console.log(
+            `✓ Frame válido - Confiança: ${(result.confidence * 100).toFixed(1)}%`
+          )
+        } else {
+          console.log(
+            `✗ Frame inválido - Confiança: ${(result.confidence * 100).toFixed(1)}%`
+          )
         }
       } catch (error) {
-        console.error('Error analyzing frame:', error)
+        console.error('❌ Erro ao analisar frame:', error)
       }
     }
 
@@ -188,8 +217,18 @@ export class PoseDetector {
     const averageConfidence = totalConfidence / framesAnalyzed
     const validRatio = validFrames / framesAnalyzed
 
+    console.log(`
+   📈 Resultado da Análise:
+      Frames analisados: ${framesAnalyzed}
+      Frames válidos: ${validFrames}
+      Taxa de sucesso: ${(validRatio * 100).toFixed(1)}%
+      Confiança média: ${(averageConfidence * 100).toFixed(1)}%
+      Status: ${validRatio >= 0.3 ? '✅ APROVADO' : '❌ REPROVADO'}
+       `)
+
+    // Reduzido de 50% para 30% de frames válidos
     return {
-      isValid: validRatio >= 0.5, // Pelo menos 50% dos frames devem ser válidos
+      isValid: validRatio >= 0.3,
       averageConfidence,
       framesAnalyzed,
       validFrames,

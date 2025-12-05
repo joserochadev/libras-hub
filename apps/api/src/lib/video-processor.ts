@@ -1,3 +1,4 @@
+// apps/api/src/lib/video-processor.ts
 import ffmpeg from 'fluent-ffmpeg'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -18,33 +19,24 @@ export class VideoProcessor {
   }
 
   /**
-   * Extrai frames do vídeo para análise
+   * Obtém informações do vídeo
    */
-  async extractFrames(
-    videoPath: string,
-    numFrames: number = 5
-  ): Promise<string[]> {
-    await this.ensureTempDir()
-
-    const outputPattern = path.join(this.tempDir, `frame-%03d.jpg`)
-
+  async getVideoInfo(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .on('end', async () => {
-          const files = await fs.readdir(this.tempDir)
-          const frames = files
-            .filter((f) => f.startsWith('frame-'))
-            .slice(0, numFrames)
-            .map((f) => path.join(this.tempDir, f))
-          resolve(frames)
-        })
-        .on('error', reject)
-        .outputOptions([
-          '-vf',
-          `fps=1/${Math.ceil(30 / numFrames)}`, // Extrai frames distribuídos
-        ])
-        .output(outputPattern)
-        .run()
+      ffmpeg.ffprobe(videoPath, (err, metadata) => {
+        if (err) {
+          console.error('❌ Erro ao obter info do vídeo:', err)
+          reject(err)
+        } else {
+          console.log('📊 Info do vídeo:', {
+            duration: metadata.format.duration,
+            size: metadata.format.size,
+            bitRate: metadata.format.bit_rate,
+            streams: metadata.streams.length,
+          })
+          resolve(metadata)
+        }
+      })
     })
   }
 
@@ -52,12 +44,8 @@ export class VideoProcessor {
    * Obtém duração do vídeo
    */
   async getVideoDuration(videoPath: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(videoPath, (err, metadata) => {
-        if (err) reject(err)
-        else resolve(metadata.format.duration || 0)
-      })
-    })
+    const metadata = await this.getVideoInfo(videoPath)
+    return metadata.format.duration || 0
   }
 
   /**
@@ -67,10 +55,23 @@ export class VideoProcessor {
     videoPath: string,
     outputPath: string
   ): Promise<string> {
+    console.log('📷 Criando thumbnail...')
+    console.log('   Input:', videoPath)
+    console.log('   Output:', outputPath)
+
     return new Promise((resolve, reject) => {
       ffmpeg(videoPath)
-        .on('end', () => resolve(outputPath))
-        .on('error', reject)
+        .on('start', (cmd) => {
+          console.log('   Comando FFmpeg:', cmd)
+        })
+        .on('end', () => {
+          console.log('✓ Thumbnail criado com sucesso')
+          resolve(outputPath)
+        })
+        .on('error', (err) => {
+          console.error('❌ Erro ao criar thumbnail:', err.message)
+          reject(err)
+        })
         .screenshots({
           timestamps: ['50%'],
           filename: path.basename(outputPath),
@@ -81,26 +82,51 @@ export class VideoProcessor {
   }
 
   /**
-   * Remove fundo do vídeo usando chroma key ou técnicas de segmentação
-   * Converte para fundo neutro (cinza claro)
+   * Normaliza o vídeo - VERSÃO ULTRA SIMPLIFICADA
+   * Apenas re-encoda com configurações básicas
    */
-  async removeBackground(
-    videoPath: string,
-    outputPath: string
-  ): Promise<string> {
+  async normalizeVideo(videoPath: string, outputPath: string): Promise<string> {
+    console.log('🎬 Normalizando vídeo...')
+    console.log('   Input:', videoPath)
+    console.log('   Output:', outputPath)
+
+    // Verifica se o arquivo de entrada existe
+    try {
+      await fs.access(videoPath)
+    } catch (err) {
+      throw new Error(`Arquivo de entrada não encontrado: ${videoPath}`)
+    }
+
     return new Promise((resolve, reject) => {
       ffmpeg(videoPath)
-        .on('end', () => resolve(outputPath))
-        .on('error', reject)
+        .on('start', (cmd) => {
+          console.log('   Comando FFmpeg:', cmd)
+        })
+        .on('progress', (progress) => {
+          if (progress.percent) {
+            console.log(`   Progresso: ${progress.percent.toFixed(1)}%`)
+          }
+        })
+        .on('end', () => {
+          console.log('✓ Vídeo normalizado com sucesso')
+          resolve(outputPath)
+        })
+        .on('error', (err, stdout, stderr) => {
+          console.error('❌ Erro ao normalizar:', err.message)
+          console.error('   Stdout:', stdout)
+          console.error('   Stderr:', stderr)
+          reject(err)
+        })
+        .videoCodec('libx264')
+        .audioCodec('aac')
+        .format('mp4')
         .outputOptions([
-          '-vf',
-          'colorkey=0x00FF00:0.3:0.2,format=yuv420p', // Remove verde
-          '-c:v',
-          'libx264',
+          '-movflags',
+          '+faststart',
+          '-preset',
+          'fast',
           '-crf',
           '23',
-          '-preset',
-          'medium',
         ])
         .output(outputPath)
         .run()
@@ -108,42 +134,58 @@ export class VideoProcessor {
   }
 
   /**
-   * Aplica fundo neutro ao vídeo
+   * Aplica fundo neutro - APENAS COPIA O VÍDEO
    */
   async applyNeutralBackground(
     videoPath: string,
-    outputPath: string,
-    backgroundColor: string = '#F3F4F6'
+    outputPath: string
   ): Promise<string> {
-    return new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .on('end', () => resolve(outputPath))
-        .on('error', reject)
-        .complexFilter([
-          // Cria um fundo da cor especificada
-          `color=${backgroundColor}:s=1280x720[bg]`,
-          // Sobrepõe o vídeo no fundo
-          '[bg][0:v]overlay=shortest=1[outv]',
-        ])
-        .outputOptions(['-map', '[outv]', '-c:v', 'libx264', '-crf', '23'])
-        .output(outputPath)
-        .run()
-    })
+    console.log('🎨 Aplicando fundo (cópia simples)...')
+
+    // Simplesmente copia o arquivo
+    await fs.copyFile(videoPath, outputPath)
+    console.log('✓ Arquivo copiado')
+
+    return outputPath
   }
 
   /**
-   * Normaliza o vídeo (resolução, codec, etc)
+   * Extrai frames do vídeo para análise
    */
-  async normalizeVideo(videoPath: string, outputPath: string): Promise<string> {
+  async extractFrames(
+    videoPath: string,
+    numFrames: number = 5
+  ): Promise<string[]> {
+    await this.ensureTempDir()
+
+    const outputPattern = path.join(this.tempDir, `frame-%03d.jpg`)
+
+    console.log('📸 Extraindo frames...')
+
     return new Promise((resolve, reject) => {
       ffmpeg(videoPath)
-        .on('end', () => resolve(outputPath))
-        .on('error', reject)
-        .videoCodec('libx264')
-        .size('1280x720')
-        .fps(30)
-        .outputOptions(['-crf', '23', '-preset', 'medium'])
-        .output(outputPath)
+        .on('start', (cmd) => {
+          console.log('   Comando FFmpeg:', cmd)
+        })
+        .on('end', async () => {
+          const files = await fs.readdir(this.tempDir)
+          const frames = files
+            .filter((f) => f.startsWith('frame-'))
+            .sort()
+            .slice(0, numFrames)
+            .map((f) => path.join(this.tempDir, f))
+
+          console.log(`✓ Extraídos ${frames.length} frames`)
+          resolve(frames)
+        })
+        .on('error', (err) => {
+          console.error('❌ Erro ao extrair frames:', err)
+          reject(err)
+        })
+        .fps(1)
+        .size('640x480')
+        .format('image2')
+        .output(outputPattern)
         .run()
     })
   }
@@ -152,11 +194,14 @@ export class VideoProcessor {
    * Limpa arquivos temporários
    */
   async cleanup(files: string[]) {
+    console.log(`🧹 Limpando ${files.length} arquivos temporários...`)
+
     for (const file of files) {
       try {
         await fs.unlink(file)
+        console.log(`   ✓ Removido: ${path.basename(file)}`)
       } catch (error) {
-        console.error(`Error deleting file ${file}:`, error)
+        console.error(`   ✗ Erro ao remover ${path.basename(file)}:`, error)
       }
     }
   }

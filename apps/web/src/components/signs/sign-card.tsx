@@ -37,7 +37,7 @@ const categoryLabels: Record<string, string> = {
 
 export function SignCard({ sign }: SignCardProps) {
   return (
-    <Link href={`/signs/${sign.id}`}>
+    <Link href={`/sinais/${sign.id}`}>
       <Card className="overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg">
         <div className="bg-muted relative aspect-video">
           {sign.thumbUrl ? (
@@ -69,18 +69,24 @@ export function SignCard({ sign }: SignCardProps) {
         <CardFooter className="bg-muted/30 border-t px-4 py-3">
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={sign.user.avatarUrl || undefined} />
+              <AvatarImage src="https://github.com/joserochadev.png" />
               <AvatarFallback>
                 <User className="h-3 w-3" />
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{sign.user.name}</p>
-              {(sign.user.city || sign.user.state) && (
+              <p className="truncate text-sm font-medium">José Rocha</p>
+              {
+                /*{(sign.user.city || sign.user.state) && (
                 <p className="text-muted-foreground truncate text-xs">
                   {sign.user.city}, {sign.user.state}
                 </p>
-              )}
+              )}*/
+
+                <p className="text-muted-foreground truncate text-xs">
+                  Tianguá, Ceará
+                </p>
+              }
             </div>
           </div>
         </CardFooter>
